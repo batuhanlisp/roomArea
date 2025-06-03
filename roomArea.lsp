@@ -1,43 +1,38 @@
-(defun my_area ( / pt obj area room_name text_height text_string)
-  ;; Metin yüksekliği istenir
-  (setq text_height (getreal "\nEnter text height: "))
-  (if (not text_height) (setq text_height 20.0))
+(defun c:ikiSatirM3 ( / pt satir1 satir2 yazi height)
+  ;; Nokta al
+  (setq pt (getpoint "\nYazı yeri seçin: "))
 
-  ;; Kullanıcı bir nokta seçene kadar döngüde kalır
-  (while (setq pt (getpoint "\nSelect a point inside the room boundary: "))
-    ;; boundary oluşturulur
-    (command ".boundary" pt "")
-    (setq obj (vlax-ename->vla-object (entlast)))
+  ;; İlk satır yazısı
+  (setq satir1 (getstring T "\nİlk satırı girin (örnek: Salon): "))
 
-    ;; Alan hesaplanır ve cm² → m² çevrilir
-    (setq area (/ (vla-get-area obj) 10000.0))
-    (vla-delete obj) ; geçici boundary nesnesi silinir
+  ;; İkinci satır sadece sayı (örn: 25)
+  (setq satir2 (getstring T "\nİkinci satırı girin (örnek: 25): "))
+  ;; Otomatik olarak m² ekle
+  (setq satir2 (strcat satir2 " m²"))
 
-    ;; Mahal adı istenir
-    (setq room_name (getstring T "\nEnter room name (e.g. SALON): "))
+  ;; Satırları birleştir
+  (setq yazi (strcat satir1 "\\P" satir2))
 
-    ;; Yazı metni iki satırlı oluşturulur
-    (setq text_string (strcat room_name "\n" (rtos area 2 2) " m²"))
+  ;; Yazı yüksekliği
+  (setq height (getreal "\nYükseklik girin (örnek 2.5): "))
 
-    ;; Metin nesnesi oluşturulur (ortalanmış)
-    (entmakex
-      (list
-        (cons 0 "TEXT")
-        (cons 10 pt)             ; konum
-        (cons 40 text_height)    ; yükseklik
-        (cons 1 text_string)     ; metin içeriği
-        (cons 7 "Standard")      ; stil
-        (cons 72 1)              ; yatay hizalama = merkez
-        (cons 73 1)              ; dikey hizalama = merkez
-        (cons 11 pt)             ; hizalama noktası
-      )
+  ;; MTEXT oluştur
+  (entmakex
+    (list
+      '(0 . "MTEXT")
+      '(100 . "AcDbEntity")
+      '(100 . "AcDbMText")
+      (cons 10 pt)
+      (cons 40 height)
+      (cons 1 yazi)
+      (cons 7 "Standard")
+      (cons 71 1)
+      (cons 72 5)
+      (cons 50 0.0)
+      (cons 210 (list 0.0 0.0 1.0))
     )
   )
-  (princ)
-)
-
-(defun c:room_area ()
-  (my_area)
+  (princ "\nSalon + m² yazısı oluşturuldu.")
   (princ)
 )
 
